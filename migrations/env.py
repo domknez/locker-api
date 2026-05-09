@@ -21,6 +21,23 @@ if config.config_file_name is not None:
 
 target_metadata = Base.metadata
 
+# Restrict autogenerate to our tables. PostGIS image installs many helper
+# tables (tiger geocoder, spatial_ref_sys, topology) into public schema; we
+# do not want them dropped or otherwise managed by Alembic.
+_OWNED_TABLES: frozenset[str] = frozenset(Base.metadata.tables.keys())
+
+
+def _include_object(obj, name, type_, reflected, _compare_to):  # type: ignore[no-untyped-def]
+    if type_ == "table":
+        # If reflected from DB and not in our metadata, ignore it entirely.
+        if reflected and name not in _OWNED_TABLES:
+            return False
+    elif type_ in {"index", "unique_constraint", "foreign_key_constraint"}:
+        table = getattr(obj, "table", None)
+        if table is not None and table.name not in _OWNED_TABLES:
+            return False
+    return True
+
 
 def run_migrations_offline() -> None:
     context.configure(
@@ -29,6 +46,7 @@ def run_migrations_offline() -> None:
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
         compare_type=True,
+        include_object=_include_object,
     )
     with context.begin_transaction():
         context.run_migrations()
@@ -39,6 +57,7 @@ def do_run_migrations(connection: Connection) -> None:
         connection=connection,
         target_metadata=target_metadata,
         compare_type=True,
+        include_object=_include_object,
     )
     with context.begin_transaction():
         context.run_migrations()
