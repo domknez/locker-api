@@ -10,14 +10,20 @@ from parcel_locker.domain.enums import SlotSize
 from parcel_locker.domain.exceptions import NotFoundError
 from parcel_locker.repositories.locker_repo import LockerRepository
 from parcel_locker.schemas.locker import LockerCreate, LockerUpdate, SlotsSpec
+from parcel_locker.services.geocoding import NominatimClient, get_geocoder
 
 
 class LockerService:
-    """Application service for locker lifecycle. Coordinates repo + (later) geocoding."""
+    """Application service for locker lifecycle. Coordinates repo + geocoding."""
 
-    def __init__(self, session: AsyncSession) -> None:
+    def __init__(
+        self,
+        session: AsyncSession,
+        geocoder: NominatimClient | None = None,
+    ) -> None:
         self._session = session
         self._repo = LockerRepository(session)
+        self._geocoder = geocoder or get_geocoder()
 
     async def create(self, payload: LockerCreate) -> Locker:
         # Geocoding integrated in Phase 4. For now, placeholder coordinates (0, 0).
@@ -62,9 +68,8 @@ class LockerService:
         await self._repo.delete(locker)
         await self._session.commit()
 
-    async def _resolve_coordinates(self, _address: str) -> tuple[float, float]:
-        # Replaced in Phase 4 with Nominatim integration.
-        return 0.0, 0.0
+    async def _resolve_coordinates(self, address: str) -> tuple[float, float]:
+        return await self._geocoder.geocode(address)
 
 
 def _build_slots(spec: SlotsSpec) -> list[Slot]:
