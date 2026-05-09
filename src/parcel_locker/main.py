@@ -4,9 +4,13 @@ from collections.abc import AsyncIterator
 from fastapi import FastAPI
 
 from parcel_locker import __version__
+from parcel_locker.api.errors import register_exception_handlers
 from parcel_locker.api.health import router as health_router
+from parcel_locker.api.lockers import router as lockers_router
 from parcel_locker.core.config import get_settings
 from parcel_locker.core.logging import configure_logging, get_logger
+
+API_V1_PREFIX = "/api/v1"
 
 
 @asynccontextmanager
@@ -29,7 +33,10 @@ def create_app() -> FastAPI:
         debug=settings.app_env == "dev",
     )
 
+    register_exception_handlers(app)
+
     app.include_router(health_router)
+    app.include_router(lockers_router, prefix=API_V1_PREFIX)
 
     return app
 
