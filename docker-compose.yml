@@ -1,0 +1,45 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: dev
+    image: parcel-locker-api:dev
+    container_name: parcel-locker-api
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-parcel}:${POSTGRES_PASSWORD:-parcel}@db:5432/${POSTGRES_DB:-parcel}
+    ports:
+      - "${API_PORT:-8000}:8000"
+    volumes:
+      - ./src:/app/src
+      - ./tests:/app/tests
+      - ./migrations:/app/migrations
+      - ./pyproject.toml:/app/pyproject.toml
+      - ./pdm.lock:/app/pdm.lock
+      - ./alembic.ini:/app/alembic.ini
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  db:
+    image: postgis/postgis:16-3.4
+    container_name: parcel-locker-db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-parcel}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-parcel}
+      POSTGRES_DB: ${POSTGRES_DB:-parcel}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-parcel} -d ${POSTGRES_DB:-parcel}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  pgdata:
