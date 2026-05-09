@@ -1,12 +1,14 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Query, Response, status
+from fastapi import APIRouter, Depends, Query, Response, status
 
 from parcel_locker.api.deps import LockerServiceDep
+from parcel_locker.core.security import require_bearer_token
 from parcel_locker.schemas.locker import LockerCreate, LockerRead, LockerUpdate
 
 router = APIRouter(prefix="/lockers", tags=["lockers"])
+AuthDep = Depends(require_bearer_token)
 
 
 @router.post(
@@ -14,6 +16,7 @@ router = APIRouter(prefix="/lockers", tags=["lockers"])
     response_model=LockerRead,
     status_code=status.HTTP_201_CREATED,
     summary="Create a locker",
+    dependencies=[AuthDep],
 )
 async def create_locker(payload: LockerCreate, service: LockerServiceDep) -> LockerRead:
     locker = await service.create(payload)
@@ -36,7 +39,12 @@ async def get_locker(locker_id: UUID, service: LockerServiceDep) -> LockerRead:
     return LockerRead.model_validate(locker)
 
 
-@router.put("/{locker_id}", response_model=LockerRead, summary="Update a locker")
+@router.put(
+    "/{locker_id}",
+    response_model=LockerRead,
+    summary="Update a locker",
+    dependencies=[AuthDep],
+)
 async def update_locker(
     locker_id: UUID,
     payload: LockerUpdate,
@@ -50,6 +58,7 @@ async def update_locker(
     "/{locker_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Delete a locker",
+    dependencies=[AuthDep],
 )
 async def delete_locker(locker_id: UUID, service: LockerServiceDep) -> Response:
     await service.delete(locker_id)
