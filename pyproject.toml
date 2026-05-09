@@ -1,0 +1,89 @@
+[project]
+name = "parcel-locker"
+version = "0.1.0"
+description = "Parcel locker REST API"
+authors = [
+    {name = "Domagoj Knez", email = "domagoj.knez@gmail.com"},
+]
+requires-python = ">=3.12,<3.13"
+readme = "README.md"
+license = {text = "MIT"}
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.32.0",
+    "pydantic>=2.9.0",
+    "pydantic-settings>=2.6.0",
+    "sqlalchemy[asyncio]>=2.0.36",
+    "asyncpg>=0.30.0",
+    "alembic>=1.14.0",
+    "httpx>=0.27.0",
+    "structlog>=24.4.0",
+    "geoalchemy2>=0.16.0",
+    "cachetools>=5.5.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.24.0",
+    "pytest-cov>=6.0.0",
+    "ruff>=0.8.0",
+    "mypy>=1.13.0",
+    "types-cachetools>=5.5.0",
+]
+
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+[tool.pdm]
+distribution = false
+
+[tool.pdm.scripts]
+dev = "uvicorn parcel_locker.main:app --host 0.0.0.0 --port 8000 --reload"
+test = "pytest"
+lint = {composite = ["ruff check src tests", "mypy src"]}
+format = "ruff format src tests"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "E", "W",   # pycodestyle
+    "F",        # pyflakes
+    "I",        # isort
+    "B",        # bugbear
+    "UP",       # pyupgrade
+    "N",        # pep8-naming
+    "SIM",      # simplify
+    "RUF",      # ruff-specific
+    "C4",       # comprehensions
+    "TCH",      # type-checking
+    "PL",       # pylint
+    "PT",       # pytest-style
+]
+ignore = [
+    "PLR0913",  # too many args (FastAPI deps)
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["PLR2004"]
+"migrations/*" = ["E501", "N999"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+plugins = ["pydantic.mypy"]
+exclude = ["migrations/"]
+
+[[tool.mypy.overrides]]
+module = ["geoalchemy2.*", "cachetools.*"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"
