@@ -1,0 +1,6 @@
+Alembic migrations.
+
+Run inside container:
+    make migrate                       # upgrade head
+    make migration m="describe change" # autogenerate
+    make downgrade                     # one step back
