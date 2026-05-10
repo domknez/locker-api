@@ -16,3 +16,7 @@ class GeocodingError(DomainError):
 
 class NoSlotAvailableError(ConflictError):
     """No free slot fits the parcel size."""
+
+
+class InvalidStateTransitionError(ConflictError):
+    """Requested parcel state transition is not allowed."""
