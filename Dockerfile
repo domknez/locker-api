@@ -36,7 +36,7 @@ COPY pdm.lock* ./
 
 # If lock missing/empty, generate; then install dev deps into .venv.
 RUN if [ ! -s pdm.lock ]; then pdm lock; fi \
-    && pdm install --dev --no-self
+    && pdm install -G dev --no-self
 
 # ---------- dev ----------
 FROM base AS dev
