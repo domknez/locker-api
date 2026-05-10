@@ -7,6 +7,7 @@ from parcel_locker import __version__
 from parcel_locker.api.errors import register_exception_handlers
 from parcel_locker.api.health import router as health_router
 from parcel_locker.api.lockers import router as lockers_router
+from parcel_locker.api.parcels import router as parcels_router
 from parcel_locker.core.config import get_settings
 from parcel_locker.core.logging import configure_logging, get_logger
 
@@ -37,6 +38,7 @@ def create_app() -> FastAPI:
 
     app.include_router(health_router)
     app.include_router(lockers_router, prefix=API_V1_PREFIX)
+    app.include_router(parcels_router, prefix=API_V1_PREFIX)
 
     return app
 
