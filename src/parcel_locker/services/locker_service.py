@@ -26,13 +26,13 @@ class LockerService:
         self._geocoder = geocoder or get_geocoder()
 
     async def create(self, payload: LockerCreate) -> Locker:
-        # Geocoding integrated in Phase 4. For now, placeholder coordinates (0, 0).
         latitude, longitude = await self._resolve_coordinates(payload.address)
 
         locker = Locker(
             address=payload.address,
             latitude=latitude,
             longitude=longitude,
+            geom=_to_wkt(latitude, longitude),
             slots=_build_slots(payload.slots),
         )
         await self._repo.add(locker)
@@ -48,12 +48,21 @@ class LockerService:
     async def list(self, *, limit: int, offset: int) -> Sequence[Locker]:
         return await self._repo.list(limit=limit, offset=offset)
 
+    async def nearest_by_address(
+        self, address: str, *, limit: int
+    ) -> Sequence[tuple[Locker, float]]:
+        latitude, longitude = await self._geocoder.geocode(address)
+        return await self._repo.find_nearest(
+            latitude=latitude, longitude=longitude, limit=limit
+        )
+
     async def update(self, locker_id: UUID, payload: LockerUpdate) -> Locker:
         locker = await self.get(locker_id)
 
         if payload.address is not None and payload.address != locker.address:
             locker.address = payload.address
             locker.latitude, locker.longitude = await self._resolve_coordinates(payload.address)
+            locker.geom = _to_wkt(locker.latitude, locker.longitude)
 
         if payload.slots is not None:
             await self._repo.replace_slots(locker, _build_slots(payload.slots))
@@ -77,3 +86,8 @@ def _build_slots(spec: SlotsSpec) -> list[Slot]:
     for size, count in spec.to_counter().items():
         slots.extend(Slot(size=SlotSize(size)) for _ in range(count))
     return slots
+
+
+def _to_wkt(latitude: float, longitude: float) -> str:
+    """WKT for a single point. PostGIS expects (lon lat) ordering."""
+    return f"SRID=4326;POINT({longitude} {latitude})"
