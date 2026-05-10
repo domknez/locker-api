@@ -31,13 +31,19 @@ class ParcelService:
 
     async def create(self, payload: ParcelCreate) -> Parcel:
         submitted_at = (
-            payload.submitted_at.astimezone(UTC) if payload.submitted_at else datetime.now(UTC)
+            payload.submitted_at.astimezone(UTC)
+            if payload.submitted_at
+            else datetime.now(UTC)
         )
-        expires_at = submitted_at + timedelta(hours=self._settings.parcel_submission_ttl_hours)
+        expires_at = submitted_at + timedelta(
+            hours=self._settings.parcel_submission_ttl_hours
+        )
 
         slot = await self._repo.acquire_free_slot(payload.size)
         if slot is None:
-            raise NoSlotAvailableError(f"No free slot available for size {payload.size}")
+            raise NoSlotAvailableError(
+                f"No free slot available for size {payload.size}"
+            )
         slot.is_occupied = True
 
         parcel = Parcel(
@@ -74,7 +80,11 @@ class ParcelService:
         parcel.state = target
 
         # Free the slot on terminal states that release the locker.
-        if target in {ParcelState.PICKED_UP, ParcelState.EXPIRED, ParcelState.CANCELLED}:
+        if target in {
+            ParcelState.PICKED_UP,
+            ParcelState.EXPIRED,
+            ParcelState.CANCELLED,
+        }:
             if parcel.slot is not None:
                 parcel.slot.is_occupied = False
 

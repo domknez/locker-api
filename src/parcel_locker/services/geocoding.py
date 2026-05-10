@@ -23,7 +23,9 @@ class NominatimClient:
     ) -> None:
         self._settings = settings or get_settings()
         # 24h TTL, bounded size to avoid unbounded growth.
-        self._cache = cache if cache is not None else TTLCache(maxsize=1024, ttl=24 * 3600)
+        self._cache = (
+            cache if cache is not None else TTLCache(maxsize=1024, ttl=24 * 3600)
+        )
         self._client = client
 
     async def geocode(self, address: str) -> tuple[float, float]:

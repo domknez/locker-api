@@ -9,7 +9,9 @@ _bearer_scheme = HTTPBearer(auto_error=False, description="Static API token")
 
 
 def require_bearer_token(
-    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(_bearer_scheme)],
+    credentials: Annotated[
+        HTTPAuthorizationCredentials | None, Depends(_bearer_scheme)
+    ],
     settings: Annotated[Settings, Depends(get_settings)],
 ) -> None:
     """Reject requests without a valid bearer token.

@@ -10,7 +10,9 @@ from parcel_locker.domain.exceptions import (
 
 
 def _error(code: str, message: str, status_code: int) -> JSONResponse:
-    return JSONResponse(status_code=status_code, content={"error": {"code": code, "message": message}})
+    return JSONResponse(
+        status_code=status_code, content={"error": {"code": code, "message": message}}
+    )
 
 
 def register_exception_handlers(app: FastAPI) -> None:

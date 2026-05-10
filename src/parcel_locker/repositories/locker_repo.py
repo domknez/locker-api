@@ -17,7 +17,12 @@ class LockerRepository:
         return await self._session.get(Locker, locker_id)
 
     async def list(self, *, limit: int, offset: int) -> Sequence[Locker]:
-        stmt = select(Locker).order_by(Locker.created_at.desc()).limit(limit).offset(offset)
+        stmt = (
+            select(Locker)
+            .order_by(Locker.created_at.desc())
+            .limit(limit)
+            .offset(offset)
+        )
         result = await self._session.execute(stmt)
         return result.scalars().all()
 

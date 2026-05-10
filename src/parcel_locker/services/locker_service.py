@@ -61,7 +61,9 @@ class LockerService:
 
         if payload.address is not None and payload.address != locker.address:
             locker.address = payload.address
-            locker.latitude, locker.longitude = await self._resolve_coordinates(payload.address)
+            locker.latitude, locker.longitude = await self._resolve_coordinates(
+                payload.address
+            )
             locker.geom = _to_wkt(locker.latitude, locker.longitude)
 
         if payload.slots is not None:

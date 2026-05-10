@@ -15,6 +15,8 @@ async def health() -> dict[str, str]:
 
 
 @router.get("/health/ready", summary="Readiness probe (DB reachable)")
-async def ready(session: Annotated[AsyncSession, Depends(get_db_session)]) -> dict[str, str]:
+async def ready(
+    session: Annotated[AsyncSession, Depends(get_db_session)],
+) -> dict[str, str]:
     await session.execute(text("SELECT 1"))
     return {"status": "ready"}
