@@ -5,7 +5,12 @@ from fastapi import APIRouter, Depends, Query, Response, status
 
 from parcel_locker.api.deps import LockerServiceDep
 from parcel_locker.core.security import require_bearer_token
-from parcel_locker.schemas.locker import LockerCreate, LockerRead, LockerUpdate
+from parcel_locker.schemas.locker import (
+    LockerCreate,
+    LockerRead,
+    LockerUpdate,
+    LockerWithDistance,
+)
 
 router = APIRouter(prefix="/lockers", tags=["lockers"])
 AuthDep = Depends(require_bearer_token)
@@ -31,6 +36,26 @@ async def list_lockers(
 ) -> list[LockerRead]:
     lockers = await service.list(limit=limit, offset=offset)
     return [LockerRead.model_validate(loc) for loc in lockers]
+
+
+@router.get(
+    "/nearest",
+    response_model=list[LockerWithDistance],
+    summary="Find lockers nearest to an address",
+)
+async def nearest_lockers(
+    service: LockerServiceDep,
+    address: Annotated[str, Query(min_length=1, max_length=500)],
+    limit: Annotated[int, Query(ge=1, le=50)] = 5,
+) -> list[LockerWithDistance]:
+    results = await service.nearest_by_address(address, limit=limit)
+    return [
+        LockerWithDistance(
+            locker=LockerRead.model_validate(loc),
+            distance_meters=dist,
+        )
+        for loc, dist in results
+    ]
 
 
 @router.get("/{locker_id}", response_model=LockerRead, summary="Get a locker")

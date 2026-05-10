@@ -65,3 +65,8 @@ class LockerRead(BaseModel):
     slots: list[SlotRead]
     created_at: datetime
     updated_at: datetime
+
+
+class LockerWithDistance(BaseModel):
+    locker: LockerRead
+    distance_meters: float
