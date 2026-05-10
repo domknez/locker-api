@@ -61,12 +61,13 @@ select = [
     "SIM",      # simplify
     "RUF",      # ruff-specific
     "C4",       # comprehensions
-    "TCH",      # type-checking
     "PL",       # pylint
     "PT",       # pytest-style
 ]
 ignore = [
     "PLR0913",  # too many args (FastAPI deps)
+    # TC001/2/3 break FastAPI + Pydantic runtime field resolution.
+    "TC001", "TC002", "TC003",
 ]
 
 [tool.ruff.lint.per-file-ignores]
