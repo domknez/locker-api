@@ -29,7 +29,7 @@ async def list_parcels(
     limit: Annotated[int, Query(ge=1, le=200)] = 50,
     offset: Annotated[int, Query(ge=0)] = 0,
 ) -> list[ParcelRead]:
-    parcels = await service.list(limit=limit, offset=offset)
+    parcels = await service.list_parcels(limit=limit, offset=offset)
     return [ParcelRead.model_validate(p) for p in parcels]
 
 

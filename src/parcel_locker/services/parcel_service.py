@@ -11,6 +11,7 @@ from parcel_locker.db.models import Parcel
 from parcel_locker.domain.enums import (
     PARCEL_TRANSITIONS,
     ParcelState,
+    is_terminal,
 )
 from parcel_locker.domain.exceptions import (
     InvalidStateTransitionError,
@@ -31,19 +32,13 @@ class ParcelService:
 
     async def create(self, payload: ParcelCreate) -> Parcel:
         submitted_at = (
-            payload.submitted_at.astimezone(UTC)
-            if payload.submitted_at
-            else datetime.now(UTC)
+            payload.submitted_at.astimezone(UTC) if payload.submitted_at else datetime.now(UTC)
         )
-        expires_at = submitted_at + timedelta(
-            hours=self._settings.parcel_submission_ttl_hours
-        )
+        expires_at = submitted_at + timedelta(hours=self._settings.parcel_submission_ttl_hours)
 
         slot = await self._repo.acquire_free_slot(payload.size)
         if slot is None:
-            raise NoSlotAvailableError(
-                f"No free slot available for size {payload.size}"
-            )
+            raise NoSlotAvailableError(f"No free slot available for size {payload.size}")
         slot.is_occupied = True
 
         parcel = Parcel(
@@ -66,7 +61,7 @@ class ParcelService:
             raise NotFoundError(f"Parcel {parcel_id} not found")
         return parcel
 
-    async def list(self, *, limit: int, offset: int) -> Sequence[Parcel]:
+    async def list_parcels(self, *, limit: int, offset: int) -> Sequence[Parcel]:
         return await self._repo.list_all(limit=limit, offset=offset)
 
     async def transition(self, parcel_id: UUID, target: ParcelState) -> Parcel:
@@ -79,13 +74,7 @@ class ParcelService:
 
         parcel.state = target
 
-        # Free the slot on terminal states that release the locker.
-        terminal_releases = {
-            ParcelState.PICKED_UP,
-            ParcelState.EXPIRED,
-            ParcelState.CANCELLED,
-        }
-        if target in terminal_releases and parcel.slot is not None:
+        if is_terminal(target) and parcel.slot is not None:
             parcel.slot.is_occupied = False
 
         await self._session.commit()
