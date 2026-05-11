@@ -14,6 +14,10 @@ class GeocodingError(DomainError):
     """Failed to resolve an address to coordinates."""
 
 
+class UnauthorizedError(DomainError):
+    """Authentication is missing or invalid."""
+
+
 class NoSlotAvailableError(ConflictError):
     """No free slot fits the parcel size."""
 

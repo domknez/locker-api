@@ -6,16 +6,33 @@ from parcel_locker.domain.exceptions import (
     DomainError,
     GeocodingError,
     NotFoundError,
+    UnauthorizedError,
 )
 
 
-def _error(code: str, message: str, status_code: int) -> JSONResponse:
+def _error(
+    code: str,
+    message: str,
+    status_code: int,
+    headers: dict[str, str] | None = None,
+) -> JSONResponse:
     return JSONResponse(
-        status_code=status_code, content={"error": {"code": code, "message": message}}
+        status_code=status_code,
+        content={"error": {"code": code, "message": message}},
+        headers=headers,
     )
 
 
 def register_exception_handlers(app: FastAPI) -> None:
+    @app.exception_handler(UnauthorizedError)
+    async def _unauthorized(_: Request, exc: UnauthorizedError) -> JSONResponse:
+        return _error(
+            "unauthorized",
+            str(exc),
+            status.HTTP_401_UNAUTHORIZED,
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
     @app.exception_handler(NotFoundError)
     async def _not_found(_: Request, exc: NotFoundError) -> JSONResponse:
         return _error("not_found", str(exc), status.HTTP_404_NOT_FOUND)

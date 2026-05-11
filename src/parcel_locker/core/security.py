@@ -1,10 +1,11 @@
 import hmac
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from parcel_locker.core.config import Settings, get_settings
+from parcel_locker.domain.exceptions import UnauthorizedError
 
 _bearer_scheme = HTTPBearer(auto_error=False, description="Static API token")
 
@@ -18,15 +19,10 @@ def require_bearer_token(
     Static token comparison; sufficient per task spec ("minimal effort").
     """
     if credentials is None or credentials.scheme.lower() != "bearer":
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Missing bearer token",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+        raise UnauthorizedError("Missing bearer token")
 
     if not hmac.compare_digest(credentials.credentials, settings.api_bearer_token):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid bearer token",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+        raise UnauthorizedError("Invalid bearer token")
+
+
+BearerAuth = Depends(require_bearer_token)
