@@ -24,7 +24,7 @@ services:
     restart: unless-stopped
 
   db:
-    image: postgis/postgis:16-3.4
+    image: imresamu/postgis:16-3.4
     container_name: parcel-locker-db
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-parcel}
