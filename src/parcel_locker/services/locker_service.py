@@ -5,9 +5,8 @@ from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from parcel_locker.db.geo import point_wkt
+from parcel_locker.db.geo import point_element
 from parcel_locker.db.models import Locker, Slot
-from parcel_locker.domain.enums import SlotSize
 from parcel_locker.domain.exceptions import NotFoundError
 from parcel_locker.repositories.locker_repo import LockerRepository
 from parcel_locker.schemas.locker import LockerCreate, LockerUpdate, SlotsSpec
@@ -33,7 +32,7 @@ class LockerService:
             address=payload.address,
             latitude=latitude,
             longitude=longitude,
-            geom=point_wkt(latitude, longitude),
+            geom=point_element(latitude, longitude),
             slots=_build_slots(payload.slots),
         )
         await self._repo.add(locker)
@@ -61,7 +60,7 @@ class LockerService:
         if payload.address is not None and payload.address != locker.address:
             locker.address = payload.address
             locker.latitude, locker.longitude = await self._geocoder.geocode(payload.address)
-            locker.geom = point_wkt(locker.latitude, locker.longitude)
+            locker.geom = point_element(locker.latitude, locker.longitude)
 
         if payload.slots is not None:
             await self._repo.replace_slots(locker, _build_slots(payload.slots))
@@ -79,5 +78,5 @@ class LockerService:
 def _build_slots(spec: SlotsSpec) -> list[Slot]:
     slots: list[Slot] = []
     for size, count in spec.to_counter().items():
-        slots.extend(Slot(size=SlotSize(size)) for _ in range(count))
+        slots.extend(Slot(size=size) for _ in range(count))
     return slots

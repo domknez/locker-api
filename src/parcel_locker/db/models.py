@@ -3,7 +3,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
-from geoalchemy2 import Geography
+from geoalchemy2 import Geography, WKBElement, WKTElement
 from sqlalchemy import Enum as SAEnum
 from sqlalchemy import Float, ForeignKey, String, func
 from sqlalchemy.dialects.postgresql import TIMESTAMP, UUID
@@ -38,7 +38,8 @@ class Locker(Base, TimestampMixin):
     address: Mapped[str] = mapped_column(String(500), nullable=False)
     latitude: Mapped[float] = mapped_column(Float, nullable=False)
     longitude: Mapped[float] = mapped_column(Float, nullable=False)
-    geom: Mapped[str] = mapped_column(
+    # Reads return WKBElement; writes accept WKTElement (or raw string via bind processor).
+    geom: Mapped[WKBElement | WKTElement] = mapped_column(
         Geography(geometry_type="POINT", srid=4326),
         nullable=False,
     )
