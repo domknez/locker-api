@@ -1,0 +1,19 @@
+meta {
+  name: Nearest Lockers
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/v1/lockers/nearest?address=Munich Hauptbahnhof&limit=5
+}
+
+params:query {
+  address: Munich Hauptbahnhof
+  limit: 5
+}
+
+assert {
+  res.status: eq 200
+  res.body: isArray
+}

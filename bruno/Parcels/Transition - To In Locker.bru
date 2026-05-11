@@ -1,0 +1,26 @@
+meta {
+  name: Transition - To IN_LOCKER
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/api/v1/parcels/{{lastParcelId}}/transition
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "target_state": "IN_LOCKER"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.state: eq IN_LOCKER
+}

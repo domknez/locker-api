@@ -1,0 +1,26 @@
+meta {
+  name: Transition - To PICKED_UP
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{baseUrl}}/api/v1/parcels/{{lastParcelId}}/transition
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "target_state": "PICKED_UP"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.state: eq PICKED_UP
+}

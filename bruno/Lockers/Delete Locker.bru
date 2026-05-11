@@ -1,0 +1,18 @@
+meta {
+  name: Delete Locker
+  type: http
+  seq: 6
+}
+
+delete {
+  url: {{baseUrl}}/api/v1/lockers/{{lastLockerId}}
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+assert {
+  res.status: eq 204
+}

@@ -1,0 +1,29 @@
+meta {
+  name: Update Locker
+  type: http
+  seq: 5
+}
+
+put {
+  url: {{baseUrl}}/api/v1/lockers/{{lastLockerId}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "address": "Stachus, Munich",
+    "slots": {
+      "M": 3,
+      "L": 1
+    }
+  }
+}
+
+assert {
+  res.status: eq 200
+}

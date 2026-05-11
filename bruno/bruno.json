@@ -1,0 +1,6 @@
+{
+  "version": "1",
+  "name": "Parcel Locker API",
+  "type": "collection",
+  "ignore": ["node_modules", ".git"]
+}

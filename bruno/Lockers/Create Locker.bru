@@ -1,0 +1,41 @@
+meta {
+  name: Create Locker
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/v1/lockers
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "address": "Marienplatz 1, Munich",
+    "slots": {
+      "XS": 1,
+      "S": 2,
+      "M": 2,
+      "L": 1,
+      "XL": 0
+    }
+  }
+}
+
+script:post-response {
+  if (res.status === 201) {
+    bru.setVar("lastLockerId", res.body.id);
+  }
+}
+
+assert {
+  res.status: eq 201
+  res.body.address: isDefined
+  res.body.latitude: isNumber
+  res.body.longitude: isNumber
+}

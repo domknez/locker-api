@@ -1,0 +1,26 @@
+meta {
+  name: Transition - Invalid (409)
+  type: http
+  seq: 8
+}
+
+post {
+  url: {{baseUrl}}/api/v1/parcels/{{lastParcelId}}/transition
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "target_state": "CREATED"
+  }
+}
+
+assert {
+  res.status: eq 409
+  res.body.error.code: eq conflict
+}

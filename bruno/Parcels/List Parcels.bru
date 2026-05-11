@@ -1,0 +1,19 @@
+meta {
+  name: List Parcels
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/v1/parcels?limit=20&offset=0
+}
+
+params:query {
+  limit: 20
+  offset: 0
+}
+
+assert {
+  res.status: eq 200
+  res.body: isArray
+}

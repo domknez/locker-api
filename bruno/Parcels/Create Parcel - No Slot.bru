@@ -1,0 +1,28 @@
+meta {
+  name: Create Parcel - No Slot (409)
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/v1/parcels
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "sender": "Alice",
+    "receiver": "Bob",
+    "size": "XL"
+  }
+}
+
+assert {
+  res.status: eq 409
+  res.body.error.code: eq conflict
+}

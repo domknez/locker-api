@@ -1,0 +1,14 @@
+meta {
+  name: Get Parcel
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/api/v1/parcels/{{lastParcelId}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.id: eq {{lastParcelId}}
+}

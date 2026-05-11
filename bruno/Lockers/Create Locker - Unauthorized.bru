@@ -1,0 +1,21 @@
+meta {
+  name: Create Locker - Unauthorized
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{baseUrl}}/api/v1/lockers
+  body: json
+}
+
+body:json {
+  {
+    "address": "Test",
+    "slots": {"S": 1}
+  }
+}
+
+assert {
+  res.status: eq 401
+}

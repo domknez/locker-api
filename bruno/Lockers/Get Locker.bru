@@ -1,0 +1,14 @@
+meta {
+  name: Get Locker
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/v1/lockers/{{lastLockerId}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.id: eq {{lastLockerId}}
+}

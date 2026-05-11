@@ -1,0 +1,28 @@
+meta {
+  name: Create Parcel - Naive Datetime (422)
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/v1/parcels
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "sender": "Alice",
+    "receiver": "Bob",
+    "size": "M",
+    "submitted_at": "2026-05-10T10:00:00"
+  }
+}
+
+assert {
+  res.status: eq 422
+}
