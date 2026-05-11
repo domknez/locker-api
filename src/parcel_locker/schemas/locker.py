@@ -4,7 +4,7 @@ from collections import Counter
 from datetime import datetime
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field
 
 from parcel_locker.domain.enums import SlotSize
 
@@ -28,11 +28,6 @@ class SlotsSpec(BaseModel):
                 SlotSize.XL: self.XL,
             }
         )
-
-    @field_validator("XS", "S", "M", "L", "XL", mode="after")
-    @classmethod
-    def _non_negative(cls, v: int) -> int:
-        return v
 
 
 class LockerCreate(BaseModel):
