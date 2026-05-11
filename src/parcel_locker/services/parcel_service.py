@@ -67,7 +67,7 @@ class ParcelService:
         return parcel
 
     async def list(self, *, limit: int, offset: int) -> Sequence[Parcel]:
-        return await self._repo.list(limit=limit, offset=offset)
+        return await self._repo.list_all(limit=limit, offset=offset)
 
     async def transition(self, parcel_id: UUID, target: ParcelState) -> Parcel:
         parcel = await self.get(parcel_id)
@@ -80,13 +80,13 @@ class ParcelService:
         parcel.state = target
 
         # Free the slot on terminal states that release the locker.
-        if target in {
+        terminal_releases = {
             ParcelState.PICKED_UP,
             ParcelState.EXPIRED,
             ParcelState.CANCELLED,
-        }:
-            if parcel.slot is not None:
-                parcel.slot.is_occupied = False
+        }
+        if target in terminal_releases and parcel.slot is not None:
+            parcel.slot.is_occupied = False
 
         await self._session.commit()
         await self._session.refresh(parcel)
