@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from functools import cache
 from typing import Any
 
 import httpx
@@ -81,12 +82,7 @@ class NominatimClient:
         return lat, lon
 
 
-_default_client: NominatimClient | None = None
-
-
+@cache
 def get_geocoder() -> NominatimClient:
-    """Module-level singleton so the in-process cache survives across requests."""
-    global _default_client
-    if _default_client is None:
-        _default_client = NominatimClient()
-    return _default_client
+    """Process-wide singleton so the in-process cache survives across requests."""
+    return NominatimClient()
