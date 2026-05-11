@@ -8,7 +8,7 @@ SERVICE := api
         migrate migration downgrade \
         test lint format typecheck \
         pdm-add pdm-add-dev pdm-remove pdm-lock pdm-install \
-        bootstrap-files clean
+        bootstrap-files ensure-up wait-api clean
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
@@ -21,6 +21,23 @@ up: .env bootstrap-files ## Build (if needed) and start stack
 bootstrap-files: ## Ensure files mounted into containers exist on host
 	@touch pdm.lock alembic.ini
 	@mkdir -p src tests migrations
+
+ensure-up: .env bootstrap-files ## Start stack (idempotent) + wait + migrate
+	@if [ -z "$$($(COMPOSE) ps -q $(SERVICE) 2>/dev/null)" ] || \
+	   [ -z "$$(docker ps -q --no-trunc | grep -F "$$($(COMPOSE) ps -q $(SERVICE) 2>/dev/null)")" ]; then \
+		echo ">> stack not running; starting…"; \
+		$(COMPOSE) up -d --build; \
+		$(MAKE) --no-print-directory wait-api; \
+		$(COMPOSE) exec -T $(SERVICE) alembic upgrade head; \
+	fi
+
+wait-api: ## Block until api container accepts exec
+	@printf ">> waiting for api"; \
+	for i in $$(seq 1 60); do \
+		if $(COMPOSE) exec -T $(SERVICE) true >/dev/null 2>&1; then echo " up."; exit 0; fi; \
+		printf "."; sleep 1; \
+	done; \
+	echo " timeout."; exit 1
 
 down: ## Stop stack
 	$(COMPOSE) down
@@ -47,29 +64,29 @@ psql: ## psql into db
 
 # ---------- alembic ----------
 
-migrate: ## Apply migrations
+migrate: ensure-up ## Apply migrations
 	$(COMPOSE) exec $(SERVICE) alembic upgrade head
 
-migration: ## Generate migration: make migration m="msg"
+migration: ensure-up ## Generate migration: make migration m="msg"
 	$(COMPOSE) exec $(SERVICE) alembic revision --autogenerate -m "$(m)"
 
-downgrade: ## Roll back one migration
+downgrade: ensure-up ## Roll back one migration
 	$(COMPOSE) exec $(SERVICE) alembic downgrade -1
 
 # ---------- quality ----------
 
-test: ## Run pytest
+test: ensure-up ## Run pytest (auto-starts stack + migrates if needed)
 	$(COMPOSE) exec $(SERVICE) pytest
 
-lint: ## Lint (ruff + mypy)
+lint: ensure-up ## Lint (ruff + mypy)
 	$(COMPOSE) exec $(SERVICE) ruff check src tests
 	$(COMPOSE) exec $(SERVICE) mypy src
 
-format: ## Format code
+format: ensure-up ## Format code
 	$(COMPOSE) exec $(SERVICE) ruff format src tests
 	$(COMPOSE) exec $(SERVICE) ruff check --fix src tests
 
-typecheck: ## mypy only
+typecheck: ensure-up ## mypy only
 	$(COMPOSE) exec $(SERVICE) mypy src
 
 # ---------- pdm (deps inside container; lockfile written to host via mount) ----------
