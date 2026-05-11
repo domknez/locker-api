@@ -60,6 +60,10 @@ make pdm-add pkg=foo       # add runtime dep (lockfile written to host)
 
 Authentication: `Authorization: Bearer <API_BEARER_TOKEN>`.
 
+### Bruno collection
+
+`bruno/` ships a ready-to-run [Bruno](https://www.usebruno.com/) collection covering every endpoint plus negative cases (401 / 422 / 409). Open the directory in Bruno, pick the `local` environment, and run requests in order — `Create Locker` and `Create Parcel` chain their IDs into the rest of the flow via collection variables. See `bruno/README.md` for the suggested run order.
+
 ### Parcel state machine
 
 ```
