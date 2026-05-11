@@ -34,7 +34,7 @@ async def list_lockers(
     limit: Annotated[int, Query(ge=1, le=200)] = 50,
     offset: Annotated[int, Query(ge=0)] = 0,
 ) -> list[LockerRead]:
-    lockers = await service.list(limit=limit, offset=offset)
+    lockers = await service.list_lockers(limit=limit, offset=offset)
     return [LockerRead.model_validate(loc) for loc in lockers]
 
 

@@ -5,6 +5,7 @@ from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from parcel_locker.db.geo import point_wkt
 from parcel_locker.db.models import Locker, Slot
 from parcel_locker.domain.enums import SlotSize
 from parcel_locker.domain.exceptions import NotFoundError
@@ -26,13 +27,13 @@ class LockerService:
         self._geocoder = geocoder or get_geocoder()
 
     async def create(self, payload: LockerCreate) -> Locker:
-        latitude, longitude = await self._resolve_coordinates(payload.address)
+        latitude, longitude = await self._geocoder.geocode(payload.address)
 
         locker = Locker(
             address=payload.address,
             latitude=latitude,
             longitude=longitude,
-            geom=_to_wkt(latitude, longitude),
+            geom=point_wkt(latitude, longitude),
             slots=_build_slots(payload.slots),
         )
         await self._repo.add(locker)
@@ -45,32 +46,27 @@ class LockerService:
             raise NotFoundError(f"Locker {locker_id} not found")
         return locker
 
-    async def list(self, *, limit: int, offset: int) -> Sequence[Locker]:
+    async def list_lockers(self, *, limit: int, offset: int) -> Sequence[Locker]:
         return await self._repo.list_all(limit=limit, offset=offset)
 
     async def nearest_by_address(
         self, address: str, *, limit: int
     ) -> Sequence[tuple[Locker, float]]:
         latitude, longitude = await self._geocoder.geocode(address)
-        return await self._repo.find_nearest(
-            latitude=latitude, longitude=longitude, limit=limit
-        )
+        return await self._repo.find_nearest(latitude=latitude, longitude=longitude, limit=limit)
 
     async def update(self, locker_id: UUID, payload: LockerUpdate) -> Locker:
         locker = await self.get(locker_id)
 
         if payload.address is not None and payload.address != locker.address:
             locker.address = payload.address
-            locker.latitude, locker.longitude = await self._resolve_coordinates(
-                payload.address
-            )
-            locker.geom = _to_wkt(locker.latitude, locker.longitude)
+            locker.latitude, locker.longitude = await self._geocoder.geocode(payload.address)
+            locker.geom = point_wkt(locker.latitude, locker.longitude)
 
         if payload.slots is not None:
             await self._repo.replace_slots(locker, _build_slots(payload.slots))
 
         await self._session.commit()
-        await self._session.refresh(locker)
         await self._session.refresh(locker, attribute_names=["slots"])
         return locker
 
@@ -79,17 +75,9 @@ class LockerService:
         await self._repo.delete(locker)
         await self._session.commit()
 
-    async def _resolve_coordinates(self, address: str) -> tuple[float, float]:
-        return await self._geocoder.geocode(address)
-
 
 def _build_slots(spec: SlotsSpec) -> list[Slot]:
     slots: list[Slot] = []
     for size, count in spec.to_counter().items():
         slots.extend(Slot(size=SlotSize(size)) for _ in range(count))
     return slots
-
-
-def _to_wkt(latitude: float, longitude: float) -> str:
-    """WKT for a single point. PostGIS expects (lon lat) ordering."""
-    return f"SRID=4326;POINT({longitude} {latitude})"
