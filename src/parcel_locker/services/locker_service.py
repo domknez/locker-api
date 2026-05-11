@@ -46,7 +46,7 @@ class LockerService:
         return locker
 
     async def list(self, *, limit: int, offset: int) -> Sequence[Locker]:
-        return await self._repo.list(limit=limit, offset=offset)
+        return await self._repo.list_all(limit=limit, offset=offset)
 
     async def nearest_by_address(
         self, address: str, *, limit: int

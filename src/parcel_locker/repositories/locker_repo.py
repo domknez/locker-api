@@ -16,7 +16,7 @@ class LockerRepository:
     async def get(self, locker_id: UUID) -> Locker | None:
         return await self._session.get(Locker, locker_id)
 
-    async def list(self, *, limit: int, offset: int) -> Sequence[Locker]:
+    async def list_all(self, *, limit: int, offset: int) -> Sequence[Locker]:
         stmt = (
             select(Locker)
             .order_by(Locker.created_at.desc())

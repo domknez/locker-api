@@ -18,7 +18,7 @@ class ParcelRepository:
     async def get(self, parcel_id: UUID) -> Parcel | None:
         return await self._session.get(Parcel, parcel_id)
 
-    async def list(self, *, limit: int, offset: int) -> Sequence[Parcel]:
+    async def list_all(self, *, limit: int, offset: int) -> Sequence[Parcel]:
         stmt = (
             select(Parcel)
             .order_by(Parcel.created_at.desc())
