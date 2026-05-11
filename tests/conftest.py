@@ -30,9 +30,7 @@ async def db_session(settings: Any) -> AsyncIterator[AsyncSession]:
     Requires the schema to already exist (alembic upgrade head run before pytest).
     """
     engine = create_async_engine(settings.database_url, future=True)
-    sessionmaker = async_sessionmaker(
-        bind=engine, expire_on_commit=False, autoflush=False
-    )
+    sessionmaker = async_sessionmaker(bind=engine, expire_on_commit=False, autoflush=False)
 
     async with sessionmaker() as session:
         # Wipe app tables so tests are independent.

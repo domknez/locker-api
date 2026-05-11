@@ -114,7 +114,5 @@ async def test_timezone_normalized_to_utc(client: AsyncClient) -> None:
         },
     )
     assert response.status_code == 201
-    submitted_at = datetime.fromisoformat(
-        response.json()["submitted_at"].replace("Z", "+00:00")
-    )
+    submitted_at = datetime.fromisoformat(response.json()["submitted_at"].replace("Z", "+00:00"))
     assert submitted_at == datetime(2026, 1, 1, 8, 0, 0, tzinfo=UTC)
