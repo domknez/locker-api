@@ -5,7 +5,6 @@ from uuid import UUID
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
 from parcel_locker.db.models import Parcel, Slot
 from parcel_locker.domain.enums import SlotSize
@@ -19,12 +18,7 @@ class ParcelRepository:
         return await self._session.get(Parcel, parcel_id)
 
     async def list_all(self, *, limit: int, offset: int) -> Sequence[Parcel]:
-        stmt = (
-            select(Parcel)
-            .order_by(Parcel.created_at.desc())
-            .limit(limit)
-            .offset(offset)
-        )
+        stmt = select(Parcel).order_by(Parcel.created_at.desc()).limit(limit).offset(offset)
         result = await self._session.execute(stmt)
         return result.scalars().unique().all()
 
@@ -46,7 +40,6 @@ class ParcelRepository:
             .order_by(Slot.created_at.asc())
             .with_for_update(skip_locked=True)
             .limit(1)
-            .options(selectinload(Slot.locker))
         )
         result = await self._session.execute(stmt)
         return result.scalar_one_or_none()
